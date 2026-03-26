@@ -59,7 +59,10 @@ def load_data(data_url_key):
 if 'selected_sensor' not in st.session_state:
     st.session_state.selected_sensor = list(all_sensors_config.keys())[0]
 
-# Sidebar sensor selector at the top
+# Sidebar title
+st.sidebar.title("FH-DASHBOARD")
+
+# Sidebar sensor selector
 st.sidebar.header("Sensor Selection")
 selected_sensor = st.sidebar.selectbox(
     "Select Sensor",
