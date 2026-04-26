@@ -59,10 +59,7 @@ def load_data(data_url_key):
 if 'selected_sensor' not in st.session_state:
     st.session_state.selected_sensor = list(all_sensors_config.keys())[0]
 
-# Sidebar title
-st.sidebar.title("FH-DASHBOARD")
-
-# Sidebar sensor selector
+# Sidebar sensor selector at the top
 st.sidebar.header("Sensor Selection")
 selected_sensor = st.sidebar.selectbox(
     "Select Sensor",
@@ -112,8 +109,8 @@ with col1:
 with col2:
     sampling_period = st.selectbox(
         "Sampling Period",
-        options=["30min", "1H", "1D", "1M"],
-        format_func=lambda x: {"30min": "30 min", "1H": "1 hour", "1D": "1 day", "1M": "1 month"}[x],
+        options=["30min", "1h", "1D", "ME"],
+        format_func=lambda x: {"30min": "30 min", "1h": "1 hour", "1D": "1 day", "ME": "1 month"}[x],
         label_visibility="collapsed"
     )
 
