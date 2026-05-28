@@ -226,6 +226,83 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
+# Data table section - only show for daily or monthly sampling
+if sampling_period in ["1D", "ME"]:
+    st.markdown("---")
+    st.subheader("📊 Data Table")
+
+    # Prepare display dataframe
+    display_df = df_resampled.copy()
+
+    # Rename columns using friendly names from config
+    column_mapping = {'datetime': 'Date'}
+    for col in display_df.columns:
+        if col in sensor_config:
+            friendly_name = sensor_config[col]
+            unit = sensor_config.get(f"{col}_UNIT", "")
+            if unit:
+                column_mapping[col] = f"{friendly_name} ({unit})"
+            else:
+                column_mapping[col] = friendly_name
+
+    display_df = display_df.rename(columns=column_mapping)
+
+    # Add consumption columns for COUNT_TIME fields
+    for col in count_cols:
+        friendly_name = sensor_config.get(col, col)
+        unit = sensor_config.get(f"{col}_UNIT", "")
+        consumption_col_name = f"{friendly_name} Consumption"
+        if unit:
+            consumption_col_name += f" ({unit})"
+        display_df[consumption_col_name] = df_diff[f'{col}_diff']
+
+    # Format datetime column based on sampling period
+    if 'Date' in display_df.columns:
+        if sampling_period == "1D":
+            # Daily format: dd/mm/yyyy
+            display_df['Date'] = display_df['Date'].dt.strftime('%d/%m/%Y')
+        elif sampling_period == "ME":
+            # Monthly format: mmm-yyyy
+            display_df['Date'] = display_df['Date'].dt.strftime('%b-%Y')
+
+    # Display options
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.write(f"Showing {len(display_df)} records")
+    with col2:
+        show_all = st.checkbox("Show all columns", value=False)
+
+    # Select columns to display
+    if show_all:
+        columns_to_show = display_df.columns.tolist()
+    else:
+        # Show only key columns by default
+        columns_to_show = ['Date']
+        # Add consumption columns
+        columns_to_show.extend([col for col in display_df.columns if 'Consumption' in col])
+        # Add battery if exists
+        if 'BATTERY' in display_df.columns:
+            columns_to_show.append('BATTERY')
+
+    # Display the table
+    st.dataframe(
+        display_df[columns_to_show],
+        use_container_width=True,
+        hide_index=True,
+        height=400
+    )
+
+    # Download button
+    csv = display_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="📥 Download Data as CSV",
+        data=csv,
+        file_name=f"{st.session_state.selected_sensor}_{st.session_state.start_date}_to_{st.session_state.end_date}.csv",
+        mime="text/csv",
+    )
+
+
+
 # Logout at the bottom of the sidebar
 st.sidebar.markdown("---")
 st.sidebar.write(f"Logged in as: {st.session_state.get('name', '')}")
